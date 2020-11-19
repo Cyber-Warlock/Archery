@@ -10,4 +10,4 @@ Left-click and move the cursor away from the player character until the aim assi
 Try to hit the red targets.
 
 Prototype developed with Unity 2019.4.3f1 for Microsoft Windows.
-(Note that fired arrows are never destroyed)
+Note that fired arrows are never destroyed
