@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class CameraShake : MonoBehaviour
 {
+    [SerializeField]
+    float velocityDampener = 600f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -19,17 +22,21 @@ public class CameraShake : MonoBehaviour
 
     public IEnumerator ShakeCamera(float duration, Vector2 arrowVelocity)
     {
-        float magnitude = (arrowVelocity.x + arrowVelocity.y) / 800;
+        // Gives the possibility of a slight variance to cam shake depending on arrow velocity, higher = more shake
+        float magnitude = (arrowVelocity.x + arrowVelocity.y) / velocityDampener;
 
+        // Cache the position of camera so it can be reset later
         Vector3 initPos = transform.position;
 
         float time = 0f;
 
         do
         {
-            float offsetX = Random.Range(-1, 1) * magnitude;
-            float offsetY = Random.Range(-1, 1) * magnitude;
+            // Get a random offset for X & Y dependent on the calculated magnitude
+            float offsetX = Random.Range(-magnitude, magnitude);
+            float offsetY = Random.Range(-magnitude, magnitude);
 
+            // Apply the offset
             transform.position = initPos + new Vector3(offsetX, offsetY);
 
             time += Time.deltaTime;
@@ -38,6 +45,7 @@ public class CameraShake : MonoBehaviour
 
         } while (time < duration);
 
+        // Reset camera to original position
         transform.position = initPos;
     }
 }

@@ -4,12 +4,18 @@ using UnityEngine;
 
 public class Bow_Draw_Behaviour : StateMachineBehaviour
 {
+    [Header("Arrow Config")]
     [SerializeField]
     GameObject arrowPrefab = default;
+
+    [SerializeField]
+    float arrowForceMultiplier = 7f;
 
     GameObject arrow;
 
     LineRenderer aimLine;
+
+    [Header("Aim Assist")]
 
     [SerializeField]
     Color moreForce = Color.red;
@@ -23,8 +29,10 @@ public class Bow_Draw_Behaviour : StateMachineBehaviour
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        // Get a reference for easier access to the LineRenderer component
         aimLine = animator.GetComponent<LineRenderer>();
 
+        // Instantiate ("nock") the arrow prefab
         arrow = Instantiate(arrowPrefab, animator.transform.position, animator.transform.rotation, animator.transform);
     }
 
@@ -56,15 +64,17 @@ public class Bow_Draw_Behaviour : StateMachineBehaviour
         arrow.transform.parent = null;
 
         // Create a multiplier for the force of the arrow based on how far the bow is "drawn"
-        float drawStrength = Mathf.Clamp(Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position), 10, 13) * 7;
+        float drawStrength = Mathf.Clamp(Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position), 10, 13) * arrowForceMultiplier;
 
-        Vector3 arrowVelocity = (Camera.main.ScreenToWorldPoint(Input.mousePosition) * -1 - animator.transform.position).normalized * drawStrength;
+        Vector3 arrowVelocity = ((Vector2)Camera.main.ScreenToWorldPoint(Input.mousePosition) * -1 - (Vector2)animator.transform.position).normalized * drawStrength;
 
         // Fire the arrow if the minForce is exceeded, otherwise destroy it
         if (Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position) > minForce)
             arrow.GetComponent<Rigidbody2D>().velocity = arrowVelocity;
         else
             Destroy(arrow);
+
+        AudioManager.Instance.Release();
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()
