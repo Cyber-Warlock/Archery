@@ -9,9 +9,22 @@ public class Bow_Draw_Behaviour : StateMachineBehaviour
 
     GameObject arrow;
 
+    LineRenderer aimLine;
+
+    [SerializeField]
+    Color moreForce = Color.red;
+
+    [SerializeField]
+    Color goodForce = Color.blue;
+
+    [SerializeField]
+    float minForce = 5f;
+
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        aimLine = animator.GetComponent<LineRenderer>();
+
         arrow = Instantiate(arrowPrefab, animator.transform.position, animator.transform.rotation, animator.transform);
     }
 
@@ -22,17 +35,36 @@ public class Bow_Draw_Behaviour : StateMachineBehaviour
         Vector2 mousePosInv = Camera.main.ScreenToWorldPoint(Input.mousePosition) * -1;
         Vector2 direction = (mousePosInv - (Vector2)animator.transform.position).normalized;
         animator.transform.up = direction;
+
+        // We'll use this multiple times so we store it in a variable in the scope
+        float cursorToPlayerDist = Vector3.Distance(mousePosInv, animator.transform.position);
+
+        // Show if draw is long enough by line color
+        aimLine.startColor = cursorToPlayerDist > minForce ? goodForce : moreForce;
+        aimLine.endColor = cursorToPlayerDist > minForce ? goodForce : moreForce;
+
+        // Position lines
+        aimLine.SetPosition(0, animator.transform.position);
+        Vector3 lineEnd = (animator.transform.up * 7) / Mathf.Clamp(Mathf.Pow(cursorToPlayerDist, 0.5f), 1, 5);
+        aimLine.SetPosition(1, lineEnd);
     }
 
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        // Release arrow from player
         arrow.transform.parent = null;
 
         // Create a multiplier for the force of the arrow based on how far the bow is "drawn"
-        float drawStrength = Mathf.Clamp(Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position), 3, 9) * 10;
+        float drawStrength = Mathf.Clamp(Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position), 10, 13) * 7;
 
-        arrow.GetComponent<Rigidbody2D>().velocity = (Camera.main.ScreenToWorldPoint(Input.mousePosition) * -1 - animator.transform.position).normalized * drawStrength;
+        Vector3 arrowVelocity = (Camera.main.ScreenToWorldPoint(Input.mousePosition) * -1 - animator.transform.position).normalized * drawStrength;
+
+        // Fire the arrow if the minForce is exceeded, otherwise destroy it
+        if (Vector2.Distance(Camera.main.ScreenToWorldPoint(Input.mousePosition), animator.transform.position) > minForce)
+            arrow.GetComponent<Rigidbody2D>().velocity = arrowVelocity;
+        else
+            Destroy(arrow);
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()

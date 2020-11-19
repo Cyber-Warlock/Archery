@@ -21,6 +21,14 @@ public class Arrow : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Target"))
+        {
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+
+            IEnumerator cr = Camera.main.GetComponent<CameraShake>().ShakeCamera(0.1f, rb.velocity);
+
+            StartCoroutine(cr);
+
             GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        }
     }
 }
